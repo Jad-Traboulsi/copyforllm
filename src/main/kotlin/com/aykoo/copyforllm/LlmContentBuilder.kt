@@ -54,7 +54,7 @@ class LlmContentBuilder(
 
         indicator.text2 = "Calculating total files..."
         indicator.fraction = 0.1
-        totalFilesToProcess = estimateTotalFiles(sortedSelection)
+        totalFilesToProcess = estimateTotalFiles(sortedSelection, projectDir)
         logger.info("Estimated total files to process: $totalFilesToProcess")
         indicator.isIndeterminate = totalFilesToProcess <= 0
 
@@ -78,7 +78,7 @@ class LlmContentBuilder(
         return BuilderResult(finalContent.trim(), fileCount, skippedCount)
     }
 
-    private fun estimateTotalFiles(files: List<VirtualFile>): Int {
+    private fun estimateTotalFiles(files: List<VirtualFile>, projectDir: VirtualFile): Int {
         var count = 0
         for (file in files) {
             try {
@@ -87,9 +87,11 @@ class LlmContentBuilder(
                 throw e
             }
             if (file.isDirectory) {
+                val relativePath = VfsUtilCore.getRelativePath(file, projectDir, '/') ?: file.name
+                if (ExclusionMatcher.isExcluded(file.name, relativePath, excludedContentPatterns)) continue
                 try {
                     val children = file.children ?: continue
-                    count += estimateTotalFiles(children.toList())
+                    count += estimateTotalFiles(children.toList(), projectDir)
                 } catch (e: Exception) {
                     logger.warn("Could not estimate children for ${file.path}", e)
                 }
@@ -149,42 +151,38 @@ class LlmContentBuilder(
                 emptyList()
             }
 
-            children.forEachIndexed { index, child ->
-                val childRelativePath = VfsUtilCore.getRelativePath(child, projectDir, '/') ?: return@forEachIndexed
+            val parentRelativePath = VfsUtilCore.getRelativePath(currentFile, projectDir, '/')
 
-                // Determine if this child node should be included in the tree
-                val isSelected = selectedRelativePaths.contains(childRelativePath)
-                val isAncestor = ancestorPaths.contains(childRelativePath)
-                val parentRelativePath = VfsUtilCore.getRelativePath(currentFile, projectDir, '/')
-                // Include node if it's selected, an ancestor, or within a selected directory
+            // A node is visible if it's part of the selection, an ancestor of a selected item, or
+            // within a selected directory - unless it's a directory matching an exclusion pattern,
+            // which is dropped entirely (not listed, not recursed into), like a .gitignore rule.
+            fun isVisible(candidate: VirtualFile): Boolean {
+                val candidateRelativePath = VfsUtilCore.getRelativePath(candidate, projectDir, '/') ?: return false
+                if (candidate.isDirectory &&
+                    ExclusionMatcher.isExcluded(candidate.name, candidateRelativePath, excludedContentPatterns)
+                ) {
+                    return false
+                }
+                val isSelected = selectedRelativePaths.contains(candidateRelativePath)
+                val isAncestor = ancestorPaths.contains(candidateRelativePath)
                 val isChildOfSelectedDir =
                     parentRelativePath != null && selectedRelativePaths.contains(parentRelativePath)
-                val shouldInclude = isSelected || isAncestor || isChildOfSelectedDir
+                return isSelected || isAncestor || isChildOfSelectedDir
+            }
 
-                if (shouldInclude) {
-                    // Determine if this is the last *visible* sibling in this level
-                    val isLastVisibleSibling = index == children.indexOfLast { sibling ->
-                        val siblingPath = VfsUtilCore.getRelativePath(sibling, projectDir, '/')
-                        val siblingIsSelected = siblingPath != null && selectedRelativePaths.contains(siblingPath)
-                        val siblingIsAncestor = siblingPath != null && ancestorPaths.contains(siblingPath)
-                        val siblingIsChildOfSelectedDir =
-                            parentRelativePath != null && selectedRelativePaths.contains(parentRelativePath)
-                        siblingPath != null && (siblingIsSelected || siblingIsAncestor || siblingIsChildOfSelectedDir)
-                    }
+            val visibleChildren = children.filter(::isVisible)
 
-                    val prefix = if (isLastVisibleSibling) "└── " else "├── "
-                    output.append("$indent$prefix${child.name}")
+            visibleChildren.forEachIndexed { index, child ->
+                val isLastVisibleSibling = index == visibleChildren.lastIndex
+                val prefix = if (isLastVisibleSibling) "└── " else "├── "
+                output.append("$indent$prefix${child.name}")
 
-                    if (child.isDirectory) {
-                        output.append("/\n")
-                        // Recurse into directories that are selected or ancestors of selected items
-                        if (isSelected || isAncestor || isChildOfSelectedDir) {
-                            val childIndent = indent + if (isLastVisibleSibling) "    " else "│   "
-                            buildTreeRecursive(child, childIndent)
-                        }
-                    } else {
-                        output.append("\n")
-                    }
+                if (child.isDirectory) {
+                    output.append("/\n")
+                    val childIndent = indent + if (isLastVisibleSibling) "    " else "│   "
+                    buildTreeRecursive(child, childIndent)
+                } else {
+                    output.append("\n")
                 }
             }
         }
@@ -219,6 +217,9 @@ class LlmContentBuilder(
             throw e
         }
         if (file.isDirectory) {
+            val relativePath = VfsUtilCore.getRelativePath(file, projectDir, '/') ?: file.name
+            if (ExclusionMatcher.isExcluded(file.name, relativePath, excludedContentPatterns)) return
+
             try {
                 val children = file.children?.sortedWith(compareBy({ !it.isDirectory }, { it.name })) ?: emptyList()
                 children.forEach { child ->

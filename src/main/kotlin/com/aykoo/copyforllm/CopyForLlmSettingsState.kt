@@ -8,16 +8,18 @@ import com.intellij.openapi.components.Storage
 import com.intellij.util.xmlb.XmlSerializerUtil
 
 /**
- * Persists the list of filename/path patterns whose content should never be copied
- * (e.g. ".env", "*.pem"). Matching files still appear in the tree, but their body is
- * replaced with a placeholder, the same way binary/empty files are already handled.
+ * Persists the list of filename/path patterns matched against files and folders.
+ * A pattern matching a file (e.g. ".env", "*.pem") only hides that file's content -
+ * it still appears in the tree, the same way binary/empty files are already handled.
+ * A pattern matching a folder (e.g. "node_modules", "secrets") excludes that whole
+ * folder, and everything inside it, from both the tree and the copy.
  */
 @Service(Service.Level.APP)
 @State(name = "CopyForLlmSettings", storages = [Storage("copyforllm.xml")])
 class CopyForLlmSettingsState : PersistentStateComponent<CopyForLlmSettingsState.State> {
 
     class State {
-        var excludedPatterns: MutableList<String> = mutableListOf(".env")
+        var excludedPatterns: MutableList<String> = mutableListOf(".env", "node_modules")
     }
 
     private var state = State()

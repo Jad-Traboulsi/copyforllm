@@ -11,8 +11,11 @@ import javax.swing.border.EmptyBorder
 
 /**
  * Settings > Tools > CopyForLlm. Lets the user maintain a list of filename/path
- * patterns (e.g. ".env", "*.pem") whose content is never copied, even when the
- * file itself is part of the selection.
+ * patterns matched against files and folders. A pattern matching a **file**
+ * (e.g. ".env", "*.pem") hides only that file's content - it still appears in
+ * the tree. A pattern matching a **folder** (e.g. "node_modules", "secrets")
+ * excludes that whole folder, and everything inside it, from both the tree
+ * and the copy - the same way a .gitignore rule would.
  */
 class CopyForLlmConfigurable : Configurable {
 
@@ -26,10 +29,12 @@ class CopyForLlmConfigurable : Configurable {
         textArea = area
 
         val info = JBLabel(
-            "<html>Files whose name or project-relative path matches one of these patterns will still<br>" +
-                "show up in the copied file tree, but their content will never be included.<br>" +
+            "<html>A pattern matching a <b>file</b> hides only that file's content - it still appears in the tree.<br>" +
+                "A pattern matching a <b>folder</b> excludes that whole folder, and everything inside it, from<br>" +
+                "both the tree and the copy.<br>" +
                 "One pattern per line. '*' and '?' wildcards are supported, matching is case-insensitive.<br>" +
-                "Example: <code>.env</code>, <code>.env.*</code>, <code>*.pem</code>, <code>secrets/*</code></html>"
+                "Example: <code>.env</code>, <code>*.pem</code> (files) &nbsp;&middot;&nbsp; " +
+                "<code>node_modules</code>, <code>secrets</code> (folders)</html>"
         )
         info.border = EmptyBorder(0, 0, 8, 0)
 

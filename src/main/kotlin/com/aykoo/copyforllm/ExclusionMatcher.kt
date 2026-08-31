@@ -1,11 +1,14 @@
 package com.aykoo.copyforllm
 
 /**
- * Matches a file's name or project-relative path against the user-configured
- * content-exclusion patterns. Patterns support the '*' and '?' glob wildcards
- * and are matched case-insensitively against both the bare filename and the
- * full relative path, so ".env" excludes ".env" anywhere in the tree without
- * requiring a leading "**/".
+ * Matches a file or directory's name or project-relative path against the
+ * user-configured exclusion patterns. Patterns support the '*' and '?' glob
+ * wildcards and are matched case-insensitively against both the bare name and
+ * the full relative path, so ".env" or "node_modules" excludes that name
+ * anywhere in the tree without requiring a leading "**/".
+ *
+ * Callers apply the match differently depending on whether the candidate is a
+ * file (hide its content only) or a directory (drop the whole subtree).
  */
 object ExclusionMatcher {
 
