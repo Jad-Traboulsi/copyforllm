@@ -46,6 +46,7 @@
         <notificationGroup id="CopyForLLMNotifications" displayType="BALLOON"/>
         <applicationService serviceImplementation="com.aykoo.copyforllm.CopyForLlmSettingsState"/>
         <applicationConfigurable
+                parentId="tools"
                 id="com.aykoo.copyforllm.settings"
                 displayName="CopyForLlm"
                 instance="com.aykoo.copyforllm.CopyForLlmConfigurable"/>
