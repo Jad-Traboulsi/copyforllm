@@ -5,7 +5,7 @@ package com.aykoo.copyforllm
  * user-configured exclusion patterns. Patterns support the '*' and '?' glob
  * wildcards and are matched case-insensitively against both the bare name and
  * the full relative path, so ".env" or "node_modules" excludes that name
- * anywhere in the tree without requiring a leading "**/".
+ * anywhere in the tree without needing a wildcard directory prefix.
  *
  * Callers apply the match differently depending on whether the candidate is a
  * file (hide its content only) or a directory (drop the whole subtree).
