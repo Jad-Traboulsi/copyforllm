@@ -17,12 +17,11 @@ each preceded by a header comment indicating its path relative to the project ro
 # Excluding sensitive files and folders
 
 Go to **Settings/Preferences > Tools > CopyForLlm** to maintain a list of filename/path patterns (one per line,
-`*`/`?` wildcards supported, case-insensitive).
+`*`/`?` wildcards supported, case-insensitive) - e.g. `.env`, `.env.*`, `*.pem`, `node_modules`, `secrets`.
 
-- A pattern matching a **file** (e.g. `.env`, `.env.*`, `*.pem`) still shows the file's location in the tree, but
-  leaves it out of the copied content entirely - no header, no content, nothing.
-- A pattern matching a **folder** (e.g. `node_modules`, `secrets`) excludes that whole folder, and everything
-  inside it, from both the tree and the copy - like a `.gitignore` rule.
+A match - whether it's a single file or a whole folder - always stays visible in the file tree, so the LLM still
+knows it exists, but it's left out of the copied content entirely: no header, no content, nothing. For a matched
+folder this applies to everything inside it too.
 
 `.env` and `node_modules` are excluded by default.
 

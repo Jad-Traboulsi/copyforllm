@@ -153,16 +153,11 @@ class LlmContentBuilder(
 
             val parentRelativePath = VfsUtilCore.getRelativePath(currentFile, projectDir, '/')
 
-            // A node is visible if it's part of the selection, an ancestor of a selected item, or
-            // within a selected directory - unless it's a directory matching an exclusion pattern,
-            // which is dropped entirely (not listed, not recursed into), like a .gitignore rule.
+            // The tree always shows the full hierarchy of the selection - exclusion patterns only
+            // affect the content section below, not what's visible here. A node is visible if it's
+            // part of the selection, an ancestor of a selected item, or within a selected directory.
             fun isVisible(candidate: VirtualFile): Boolean {
                 val candidateRelativePath = VfsUtilCore.getRelativePath(candidate, projectDir, '/') ?: return false
-                if (candidate.isDirectory &&
-                    ExclusionMatcher.isExcluded(candidate.name, candidateRelativePath, excludedContentPatterns)
-                ) {
-                    return false
-                }
                 val isSelected = selectedRelativePaths.contains(candidateRelativePath)
                 val isAncestor = ancestorPaths.contains(candidateRelativePath)
                 val isChildOfSelectedDir =
