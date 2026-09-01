@@ -1,10 +1,12 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.aykoo.copyforllm</id>
-    <name>CopyForLlm</name>
+    <id>com.jadtraboulsi.copyforllm</id>
+    <name>CopyForLlm+</name>
     <version>1.1.0</version>
-    <vendor url="https://github.com/AykoSc/copyforllm">Aykoo</vendor>
+    <vendor url="https://github.com/Jad-Traboulsi/copyforllm">Jad Traboulsi</vendor>
     <description><![CDATA[
+    A fork of <a href="https://github.com/AykoSc/copyforllm">AykoSc/copyforllm</a> that adds sensitive-file/folder
+    exclusion.<br>
     Copies selected files and folders structure and content to the clipboard, formatted for easy pasting into Large Language Models (LLMs).<br>
     <em>Features:</em>
     <ul>

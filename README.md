@@ -1,11 +1,11 @@
-# Copy for LLM JetBrains Plugin
+# CopyForLlm+ JetBrains Plugin
 
 Copies selected project file structure and content to the clipboard, formatted for pasting into Large Language Models (
 LLMs).
 
-This is a modified copy of [AykoSc/copyforllm](https://github.com/AykoSc/copyforllm), licensed under the
-Apache License 2.0 (see `LICENSE`). Changes in this copy: added a settings page to exclude sensitive files
-(e.g. `.env`) from the copied content.
+This is a fork of [AykoSc/copyforllm](https://github.com/AykoSc/copyforllm), licensed under the
+Apache License 2.0 (see `LICENSE`). Changes in this fork: added a settings page to exclude sensitive files and
+folders (e.g. `.env`, `node_modules`) from the copied content.
 
 # Usage
 
