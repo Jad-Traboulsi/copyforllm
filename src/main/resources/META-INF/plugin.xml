@@ -13,14 +13,14 @@
         <li>Generates a file tree of the selection relative to the project root.</li>
         <li>Includes file content with language-specific comment headers showing project-relative paths.</li>
         <li>Skips binary and empty file content but includes them in the tree/header.</li>
-        <li>Settings > Tools > CopyForLlm: configure filename/path patterns to hide sensitive file content (e.g. ".env") or exclude whole folders (e.g. "node_modules", "secrets") entirely.</li>
+        <li>Settings > Tools > CopyForLlm: configure filename/path patterns to leave sensitive files (e.g. ".env") out of the copied content while keeping their location visible in the tree, or exclude whole folders (e.g. "node_modules", "secrets") entirely.</li>
     </ul>
     Right-click on files/folders in the Project view and select "Copy for LLM".
     ]]></description>
     <change-notes><![CDATA[
     <em>1.1.0</em>
      <ul>
-         <li>Added a Settings > Tools > CopyForLlm page to configure exclusion patterns. A pattern matching a file (e.g. ".env", "*.pem") hides only its content, while it still appears in the tree. A pattern matching a folder (e.g. "node_modules", "secrets") excludes that whole folder from both the tree and the copy.</li>
+         <li>Added a Settings > Tools > CopyForLlm page to configure exclusion patterns. A pattern matching a file (e.g. ".env", "*.pem") still shows its location in the tree but leaves it out of the copied content entirely. A pattern matching a folder (e.g. "node_modules", "secrets") excludes that whole folder from both the tree and the copy.</li>
          <li>".env" and "node_modules" are excluded by default.</li>
      </ul>
      <br/>

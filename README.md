@@ -19,8 +19,8 @@ each preceded by a header comment indicating its path relative to the project ro
 Go to **Settings/Preferences > Tools > CopyForLlm** to maintain a list of filename/path patterns (one per line,
 `*`/`?` wildcards supported, case-insensitive).
 
-- A pattern matching a **file** (e.g. `.env`, `.env.*`, `*.pem`) only hides that file's content - it still shows up
-  in the file tree, with a placeholder in place of its content, the same way binary/empty files are handled.
+- A pattern matching a **file** (e.g. `.env`, `.env.*`, `*.pem`) still shows the file's location in the tree, but
+  leaves it out of the copied content entirely - no header, no content, nothing.
 - A pattern matching a **folder** (e.g. `node_modules`, `secrets`) excludes that whole folder, and everything
   inside it, from both the tree and the copy - like a `.gitignore` rule.
 

@@ -9,10 +9,10 @@ import com.intellij.util.xmlb.XmlSerializerUtil
 
 /**
  * Persists the list of filename/path patterns matched against files and folders.
- * A pattern matching a file (e.g. ".env", "*.pem") only hides that file's content -
- * it still appears in the tree, the same way binary/empty files are already handled.
- * A pattern matching a folder (e.g. "node_modules", "secrets") excludes that whole
- * folder, and everything inside it, from both the tree and the copy.
+ * A pattern matching a file (e.g. ".env", "*.pem") keeps that file in the tree
+ * (so its location is still visible) but leaves it out of the copied content
+ * entirely. A pattern matching a folder (e.g. "node_modules", "secrets") excludes
+ * that whole folder, and everything inside it, from both the tree and the copy.
  */
 @Service(Service.Level.APP)
 @State(name = "CopyForLlmSettings", storages = [Storage("copyforllm.xml")])

@@ -246,13 +246,20 @@ class LlmContentBuilder(
         updateProgress("Processing: ${file.name}")
 
         val pathFromRoot = VfsUtilCore.getRelativePath(file, projectDir, '/') ?: file.name
+
+        if (ExclusionMatcher.isExcluded(file.name, pathFromRoot, excludedContentPatterns)) {
+            // Excluded files are left out of the content section entirely - only their
+            // location in the tree is shown, nothing is written here at all.
+            onFileSkipped(file, "excluded by CopyForLlm settings")
+            return
+        }
+
         val lineCommentPrefix = getLanguageCommentPrefix(file)
 
         // Header: Start with one blank line, then the File: path line.
         output.append("\n$lineCommentPrefix File: $pathFromRoot\n")
 
         val skipReason = when {
-            ExclusionMatcher.isExcluded(file.name, pathFromRoot, excludedContentPatterns) -> "excluded by CopyForLlm settings"
             file.length == 0L -> "empty"
             file.fileType.isBinary -> "binary"
             // TODO: Add file size check here
