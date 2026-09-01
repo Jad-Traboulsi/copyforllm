@@ -20,8 +20,10 @@ Go to **Settings/Preferences > Tools > CopyForLlm** to maintain a list of filena
 `*`/`?` wildcards supported, case-insensitive) - e.g. `.env`, `.env.*`, `*.pem`, `node_modules`, `secrets`.
 
 A match - whether it's a single file or a whole folder - always stays visible in the file tree, so the LLM still
-knows it exists, but it's left out of the copied content entirely: no header, no content, nothing. For a matched
-folder this applies to everything inside it too.
+knows it exists. In the content section it gets a short note that it was skipped (e.g.
+`# (excluded by CopyForLlm settings file, content skipped)`), but its actual content is never included. For a
+matched folder this applies to everything inside it too, without descending into and noting every file inside it
+individually.
 
 `.env` and `node_modules` are excluded by default.
 

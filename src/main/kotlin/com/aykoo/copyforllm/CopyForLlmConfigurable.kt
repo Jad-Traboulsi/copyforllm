@@ -13,7 +13,8 @@ import javax.swing.border.EmptyBorder
  * Settings > Tools > CopyForLlm. Lets the user maintain a list of filename/path
  * patterns matched against files and folders (e.g. ".env", "*.pem", "node_modules",
  * "secrets"). A match - whether a single file or a whole folder - always stays
- * visible in the tree, but is left out of the copied content entirely.
+ * visible in the tree; in the content section it's noted as skipped, but its
+ * actual content is never included.
  */
 class CopyForLlmConfigurable : Configurable {
 
@@ -27,8 +28,8 @@ class CopyForLlmConfigurable : Configurable {
         textArea = area
 
         val info = JBLabel(
-            "<html>A match - whether a single file or a whole folder - always stays visible in the tree,<br>" +
-                "but is left out of the copied content entirely.<br>" +
+            "<html>A match - whether a single file or a whole folder - always stays visible in the tree;<br>" +
+                "in the content section it's noted as skipped, but its actual content is never included.<br>" +
                 "One pattern per line. '*' and '?' wildcards are supported, matching is case-insensitive.<br>" +
                 "Example: <code>.env</code>, <code>*.pem</code>, <code>node_modules</code>, <code>secrets</code></html>"
         )

@@ -137,6 +137,18 @@ class LlmContentBuilder(
             }
         }
 
+        // The tree always shows the full hierarchy of the selection - exclusion patterns only
+        // affect the content section below, not what's visible here. A node is visible if it's
+        // a descendant of any selected path (at any depth, not just directly under it), or an
+        // ancestor of a selected item (to draw the path down to it from the root).
+        fun isVisible(candidate: VirtualFile): Boolean {
+            val candidateRelativePath = VfsUtilCore.getRelativePath(candidate, projectDir, '/') ?: return false
+            val isWithinSelectedDir = selectedRelativePaths.any { selected ->
+                selected.isEmpty() || candidateRelativePath == selected || candidateRelativePath.startsWith("$selected/")
+            }
+            return isWithinSelectedDir || ancestorPaths.contains(candidateRelativePath)
+        }
+
         fun buildTreeRecursive(currentFile: VirtualFile, indent: String) {
             try {
                 indicator.checkCanceled()
@@ -149,20 +161,6 @@ class LlmContentBuilder(
             } catch (e: Exception) {
                 logger.warn("Could not read children of ${currentFile.path} for tree view", e)
                 emptyList()
-            }
-
-            val parentRelativePath = VfsUtilCore.getRelativePath(currentFile, projectDir, '/')
-
-            // The tree always shows the full hierarchy of the selection - exclusion patterns only
-            // affect the content section below, not what's visible here. A node is visible if it's
-            // part of the selection, an ancestor of a selected item, or within a selected directory.
-            fun isVisible(candidate: VirtualFile): Boolean {
-                val candidateRelativePath = VfsUtilCore.getRelativePath(candidate, projectDir, '/') ?: return false
-                val isSelected = selectedRelativePaths.contains(candidateRelativePath)
-                val isAncestor = ancestorPaths.contains(candidateRelativePath)
-                val isChildOfSelectedDir =
-                    parentRelativePath != null && selectedRelativePaths.contains(parentRelativePath)
-                return isSelected || isAncestor || isChildOfSelectedDir
             }
 
             val visibleChildren = children.filter(::isVisible)
@@ -213,7 +211,11 @@ class LlmContentBuilder(
         }
         if (file.isDirectory) {
             val relativePath = VfsUtilCore.getRelativePath(file, projectDir, '/') ?: file.name
-            if (ExclusionMatcher.isExcluded(file.name, relativePath, excludedContentPatterns)) return
+            if (ExclusionMatcher.isExcluded(file.name, relativePath, excludedContentPatterns)) {
+                output.append("\n# Folder: $relativePath/\n# (excluded by CopyForLlm settings, folder skipped)\n\n")
+                onFileSkipped(file, "excluded by CopyForLlm settings")
+                return
+            }
 
             try {
                 val children = file.children?.sortedWith(compareBy({ !it.isDirectory }, { it.name })) ?: emptyList()
@@ -241,20 +243,13 @@ class LlmContentBuilder(
         updateProgress("Processing: ${file.name}")
 
         val pathFromRoot = VfsUtilCore.getRelativePath(file, projectDir, '/') ?: file.name
-
-        if (ExclusionMatcher.isExcluded(file.name, pathFromRoot, excludedContentPatterns)) {
-            // Excluded files are left out of the content section entirely - only their
-            // location in the tree is shown, nothing is written here at all.
-            onFileSkipped(file, "excluded by CopyForLlm settings")
-            return
-        }
-
         val lineCommentPrefix = getLanguageCommentPrefix(file)
 
         // Header: Start with one blank line, then the File: path line.
         output.append("\n$lineCommentPrefix File: $pathFromRoot\n")
 
         val skipReason = when {
+            ExclusionMatcher.isExcluded(file.name, pathFromRoot, excludedContentPatterns) -> "excluded by CopyForLlm settings"
             file.length == 0L -> "empty"
             file.fileType.isBinary -> "binary"
             // TODO: Add file size check here
