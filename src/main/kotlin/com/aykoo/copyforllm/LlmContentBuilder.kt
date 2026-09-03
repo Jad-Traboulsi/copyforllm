@@ -212,8 +212,8 @@ class LlmContentBuilder(
         if (file.isDirectory) {
             val relativePath = VfsUtilCore.getRelativePath(file, projectDir, '/') ?: file.name
             if (ExclusionMatcher.isExcluded(file.name, relativePath, excludedContentPatterns)) {
-                output.append("\n# Folder: $relativePath/\n# (excluded by CopyForLlm settings, folder skipped)\n\n")
-                onFileSkipped(file, "excluded by CopyForLlm settings")
+                output.append("\n# Folder: $relativePath/\n# (excluded by CopyForLlm+ settings, folder skipped)\n\n")
+                onFileSkipped(file, "excluded by CopyForLlm+ settings")
                 return
             }
 
@@ -249,7 +249,7 @@ class LlmContentBuilder(
         output.append("\n$lineCommentPrefix File: $pathFromRoot\n")
 
         val skipReason = when {
-            ExclusionMatcher.isExcluded(file.name, pathFromRoot, excludedContentPatterns) -> "excluded by CopyForLlm settings"
+            ExclusionMatcher.isExcluded(file.name, pathFromRoot, excludedContentPatterns) -> "excluded by CopyForLlm+ settings"
             file.length == 0L -> "empty"
             file.fileType.isBinary -> "binary"
             // TODO: Add file size check here
