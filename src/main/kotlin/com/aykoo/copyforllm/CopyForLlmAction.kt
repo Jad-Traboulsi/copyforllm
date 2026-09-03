@@ -1,8 +1,5 @@
 package com.aykoo.copyforllm
 
-import com.intellij.ide.projectView.ProjectViewNode
-import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -14,19 +11,12 @@ import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiDirectory
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import java.awt.datatransfer.StringSelection
 
 
 class CopyForLlmAction : AnAction() {
 
     private val logger = Logger.getInstance(CopyForLlmAction::class.java)
-    private val notificationGroupId = "CopyForLLMNotifications"
 
     /**
      * Specify that the update method should run on the EDT (Event Dispatch Thread)
@@ -62,9 +52,7 @@ class CopyForLlmAction : AnAction() {
         //    logger.info("Navigatable[$index]: Type=${nav?.javaClass?.name ?: "null"}, Value=${nav}")
         // }
 
-        val selectedFiles = navigatables.mapNotNull { navigatable ->
-            resolveVirtualFile(navigatable) // Use helper function for clarity
-        }.distinct().toTypedArray()
+        val selectedFiles = SelectionResolver.resolve(navigatables).toTypedArray()
 
         logger.info("Resolved ${selectedFiles.size} distinct VirtualFiles from ${navigatables.size} Navigatables.")
         // Optional: Log resolved files
@@ -72,7 +60,7 @@ class CopyForLlmAction : AnAction() {
 
         if (selectedFiles.isEmpty()) {
             logger.warn("Action performed but failed to resolve any VirtualFiles from the selected Navigatables.")
-            showNotification(
+            CopyForLlmNotifier.notify(
                 project,
                 NotificationType.WARNING,
                 "Could not determine the selected files/folders to copy."
@@ -81,7 +69,7 @@ class CopyForLlmAction : AnAction() {
         }
 
         // Run the potentially long-running operation in a background thread
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Copying for LLM", true) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Copying for LLM+", true) {
             override fun run(indicator: ProgressIndicator) {
                 indicator.isIndeterminate = false
                 indicator.fraction = 0.0
@@ -100,16 +88,16 @@ class CopyForLlmAction : AnAction() {
                         val charCount = contentToCopy.length
 
                         CopyPasteManager.getInstance().setContents(StringSelection(contentToCopy))
-                        showNotification(
+                        CopyForLlmNotifier.notify(
                             project,
                             NotificationType.INFORMATION,
                             "Copied ${result.fileCount} files (${result.skippedCount} skipped, ${charCount} characters) to clipboard."
                         )
                     }
                 } catch (ex: Exception) { // Catch generic exceptions during the process
-                    logger.error("Copy for LLM Action failed.", ex)
+                    logger.error("Copy for LLM+ action failed.", ex)
                     ApplicationManager.getApplication().invokeLater {
-                        showNotification(
+                        CopyForLlmNotifier.notify(
                             project,
                             NotificationType.ERROR,
                             "Error copying content: ${ex.message ?: "Unknown error"}"
@@ -118,62 +106,5 @@ class CopyForLlmAction : AnAction() {
                 }
             }
         })
-    }
-
-    /**
-     * Attempts to resolve a VirtualFile from various common Navigatable types found in IDE contexts.
-     */
-    private fun resolveVirtualFile(navigatable: Navigatable?): VirtualFile? {
-        if (navigatable == null) return null
-
-        // --- Generic VirtualFile Resolution Logic ---
-        var virtualFile: VirtualFile? = null
-
-        // 1. Check if it IS a VirtualFile already
-        if (navigatable is VirtualFile) {
-            virtualFile = navigatable
-        }
-
-        // 2. Check if it's a PsiElement
-        if (virtualFile == null && navigatable is PsiElement) {
-            virtualFile = when (navigatable) {
-                is PsiFile -> navigatable.virtualFile
-                is PsiDirectory -> navigatable.virtualFile
-                else -> navigatable.containingFile?.virtualFile // Fallback for other elements
-            }
-        }
-
-        // 3. Check common Project View Node types (interface/base class)
-        if (virtualFile == null && navigatable is ProjectViewNode<*>) {
-            virtualFile = navigatable.virtualFile
-        }
-
-        // 4. Check AbstractTreeNode types (common base for tree nodes)
-        if (virtualFile == null && navigatable is AbstractTreeNode<*>) {
-            when (val value = navigatable.value) {
-                is PsiElement -> virtualFile = when (value) {
-                    is PsiFile -> value.virtualFile
-                    is PsiDirectory -> value.virtualFile
-                    else -> value.containingFile?.virtualFile
-                }
-
-                is VirtualFile -> virtualFile = value
-            }
-        }
-
-        if (virtualFile == null) {
-            logger.warn("Could not resolve VirtualFile for Navigatable type: ${navigatable.javaClass.name}")
-        }
-
-        return virtualFile
-    }
-
-
-    /** Displays a balloon notification in the IDE. */
-    private fun showNotification(project: Project, type: NotificationType, content: String) {
-        NotificationGroupManager.getInstance()
-            .getNotificationGroup(notificationGroupId)
-            .createNotification(content, type)
-            .notify(project)
     }
 }

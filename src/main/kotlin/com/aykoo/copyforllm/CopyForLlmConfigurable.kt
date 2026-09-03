@@ -10,7 +10,7 @@ import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 
 /**
- * Settings > Tools > CopyForLlm. Lets the user maintain a list of filename/path
+ * Settings > Tools > CopyForLlm+. Lets the user maintain a list of filename/path
  * patterns matched against files and folders (e.g. ".env", "*.pem", "node_modules",
  * "secrets"). A match - whether a single file or a whole folder - always stays
  * visible in the tree; in the content section it's noted as skipped, but its
@@ -20,7 +20,7 @@ class CopyForLlmConfigurable : Configurable {
 
     private var textArea: JBTextArea? = null
 
-    override fun getDisplayName(): String = "CopyForLlm"
+    override fun getDisplayName(): String = "CopyForLlm+"
 
     override fun createComponent(): JComponent {
         val area = JBTextArea(10, 40)
@@ -31,6 +31,7 @@ class CopyForLlmConfigurable : Configurable {
             "<html>A match - whether a single file or a whole folder - always stays visible in the tree;<br>" +
                 "in the content section it's noted as skipped, but its actual content is never included.<br>" +
                 "One pattern per line. '*' and '?' wildcards are supported, matching is case-insensitive.<br>" +
+                "Right-clicking a file or folder and choosing \"Exclude from Copy for LLM+\" adds its path here.<br>" +
                 "Example: <code>.env</code>, <code>*.pem</code>, <code>node_modules</code>, <code>secrets</code></html>"
         )
         info.border = EmptyBorder(0, 0, 8, 0)

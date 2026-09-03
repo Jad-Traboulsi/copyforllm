@@ -21,6 +21,21 @@ object ExclusionMatcher {
         return compiled.any { it.matches(fileName) || it.matches(relativePath) }
     }
 
+    /**
+     * Whether a project-relative path is excluded either in its own right or
+     * because one of its parent folders matches - mirroring the builder, which
+     * notes a matched folder as skipped instead of descending into it.
+     */
+    fun isExcludedIncludingAncestors(relativePath: String, patterns: List<String>): Boolean {
+        var current = relativePath
+        while (current.isNotEmpty()) {
+            if (isExcluded(current.substringAfterLast('/'), current, patterns)) return true
+            if (!current.contains('/')) return false
+            current = current.substringBeforeLast('/')
+        }
+        return false
+    }
+
     private fun globToRegex(glob: String): Regex {
         val sb = StringBuilder("(?i)")
         for (c in glob) {

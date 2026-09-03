@@ -35,6 +35,20 @@ class CopyForLlmSettingsState : PersistentStateComponent<CopyForLlmSettingsState
             state.excludedPatterns = value
         }
 
+    /** Appends the patterns that aren't configured yet, keeping the existing order. */
+    fun addExcludedPatterns(patterns: Collection<String>) {
+        val updated = state.excludedPatterns.toMutableList()
+        patterns.map { it.trim() }
+            .filter { it.isNotEmpty() && it !in updated }
+            .forEach { updated.add(it) }
+        state.excludedPatterns = updated
+    }
+
+    fun removeExcludedPatterns(patterns: Collection<String>) {
+        val removed = patterns.map { it.trim() }.toSet()
+        state.excludedPatterns = state.excludedPatterns.filterNot { it in removed }.toMutableList()
+    }
+
     companion object {
         fun getInstance(): CopyForLlmSettingsState =
             ApplicationManager.getApplication().getService(CopyForLlmSettingsState::class.java)
