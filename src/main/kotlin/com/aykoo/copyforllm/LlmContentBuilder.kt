@@ -31,6 +31,7 @@ class LlmContentBuilder(
     private var totalFilesToProcess = 0
     private var processedFilesCount = 0
     private val excludedContentPatterns = CopyForLlmSettingsState.getInstance().excludedPatterns
+    private val hideBinaryFilesInTree = CopyForLlmSettingsState.getInstance().hideBinaryFilesInTree
 
     fun buildContent(selectedFiles: Array<VirtualFile>): BuilderResult {
         if (selectedFiles.isEmpty()) return BuilderResult("No files selected.", 0, 0)
@@ -137,16 +138,41 @@ class LlmContentBuilder(
             }
         }
 
-        // The tree always shows the full hierarchy of the selection - exclusion patterns only
-        // affect the content section below, not what's visible here. A node is visible if it's
-        // a descendant of any selected path (at any depth, not just directly under it), or an
-        // ancestor of a selected item (to draw the path down to it from the root).
+        // Exclusion patterns never hide anything here - they only affect the content section
+        // below. A node is visible if it's a descendant of any selected path (at any depth, not
+        // just directly under it), or an ancestor of a selected item (to draw the path down to
+        // it from the root).
         fun isVisible(candidate: VirtualFile): Boolean {
             val candidateRelativePath = VfsUtilCore.getRelativePath(candidate, projectDir, '/') ?: return false
             val isWithinSelectedDir = selectedRelativePaths.any { selected ->
                 selected.isEmpty() || candidateRelativePath == selected || candidateRelativePath.startsWith("$selected/")
             }
             return isWithinSelectedDir || ancestorPaths.contains(candidateRelativePath)
+        }
+
+        fun childrenOf(dir: VirtualFile): List<VirtualFile> = try {
+            dir.children?.sortedWith(compareBy({ !it.isDirectory }, { it.name })) ?: emptyList()
+        } catch (e: Exception) {
+            logger.warn("Could not read children of ${dir.path} for tree view", e)
+            emptyList()
+        }
+
+        // With "hide binary files" on, a binary file never reaches the tree, and a folder left
+        // with nothing to show goes with it. Memoized by path, so answering this for the whole
+        // selection costs one extra pass over it rather than one per level of nesting.
+        val foldersWithVisibleContent = mutableMapOf<String, Boolean>()
+
+        fun hasVisibleContent(dir: VirtualFile): Boolean = foldersWithVisibleContent.getOrPut(dir.path) {
+            indicator.checkCanceled()
+            childrenOf(dir).any { child ->
+                isVisible(child) && if (child.isDirectory) hasVisibleContent(child) else !child.fileType.isBinary
+            }
+        }
+
+        fun isShownInTree(candidate: VirtualFile): Boolean {
+            if (!isVisible(candidate)) return false
+            if (!hideBinaryFilesInTree) return true
+            return if (candidate.isDirectory) hasVisibleContent(candidate) else !candidate.fileType.isBinary
         }
 
         fun buildTreeRecursive(currentFile: VirtualFile, indent: String) {
@@ -156,14 +182,7 @@ class LlmContentBuilder(
                 throw e
             }
 
-            val children = try {
-                currentFile.children?.sortedWith(compareBy({ !it.isDirectory }, { it.name })) ?: emptyList()
-            } catch (e: Exception) {
-                logger.warn("Could not read children of ${currentFile.path} for tree view", e)
-                emptyList()
-            }
-
-            val visibleChildren = children.filter(::isVisible)
+            val visibleChildren = childrenOf(currentFile).filter(::isShownInTree)
 
             visibleChildren.forEachIndexed { index, child ->
                 val isLastVisibleSibling = index == visibleChildren.lastIndex

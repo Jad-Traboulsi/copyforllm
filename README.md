@@ -33,6 +33,15 @@ individually.
 
 `.env` and `node_modules` are excluded by default.
 
+# Hiding binary files from the tree
+
+**Settings/Preferences > Tools > CopyForLlm+** also carries **Hide binary files in the copied file tree**, on by
+default. With it on, binary files are dropped from the tree, and so is any folder left with nothing else to show -
+the tree stays about the code the LLM can actually read.
+
+This only affects the tree. The content section is untouched: it still names every binary file and notes that its
+content was skipped, exactly as before. Turn the option off to get the old tree back.
+
 # Caveats
 
 Only tested with IntelliJ. Other JetBrains IDEs should work, but are not guaranteed to be supported.
