@@ -1,6 +1,7 @@
 package com.aykoo.copyforllm
 
 import com.intellij.openapi.options.Configurable
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -14,11 +15,13 @@ import javax.swing.border.EmptyBorder
  * patterns matched against files and folders (e.g. ".env", "*.pem", "node_modules",
  * "secrets"). A match - whether a single file or a whole folder - always stays
  * visible in the tree; in the content section it's noted as skipped, but its
- * actual content is never included.
+ * actual content is never included. Also carries the option to leave binary files
+ * out of the copied tree.
  */
 class CopyForLlmConfigurable : Configurable {
 
     private var textArea: JBTextArea? = null
+    private var hideBinaryCheckBox: JBCheckBox? = null
 
     override fun getDisplayName(): String = "CopyForLlm+"
 
@@ -36,28 +39,51 @@ class CopyForLlmConfigurable : Configurable {
         )
         info.border = EmptyBorder(0, 0, 8, 0)
 
+        val checkBox = JBCheckBox("Hide binary files in the copied file tree")
+        hideBinaryCheckBox = checkBox
+        val checkBoxNote = JBLabel(
+            "<html>A folder left with nothing to show is hidden along with them. This only<br>" +
+                "affects the tree - the content section still names every binary file and<br>" +
+                "notes that its content was skipped.</html>"
+        )
+        checkBoxNote.border = EmptyBorder(0, 24, 0, 0)
+
+        val binarySection = JPanel(BorderLayout())
+        binarySection.border = EmptyBorder(8, 0, 0, 0)
+        binarySection.add(checkBox, BorderLayout.NORTH)
+        binarySection.add(checkBoxNote, BorderLayout.CENTER)
+
         val panel = JPanel(BorderLayout())
         panel.border = EmptyBorder(8, 8, 8, 8)
         panel.add(info, BorderLayout.NORTH)
         panel.add(JBScrollPane(area), BorderLayout.CENTER)
+        panel.add(binarySection, BorderLayout.SOUTH)
         return panel
     }
 
     private fun currentPatterns(): List<String> =
         textArea?.text.orEmpty().lines().map { it.trim() }.filter { it.isNotEmpty() }
 
-    override fun isModified(): Boolean =
-        currentPatterns() != CopyForLlmSettingsState.getInstance().excludedPatterns
+    override fun isModified(): Boolean {
+        val settings = CopyForLlmSettingsState.getInstance()
+        val binaryOptionChanged = hideBinaryCheckBox?.let { it.isSelected != settings.hideBinaryFilesInTree } == true
+        return currentPatterns() != settings.excludedPatterns || binaryOptionChanged
+    }
 
     override fun apply() {
-        CopyForLlmSettingsState.getInstance().excludedPatterns = currentPatterns().toMutableList()
+        val settings = CopyForLlmSettingsState.getInstance()
+        settings.excludedPatterns = currentPatterns().toMutableList()
+        hideBinaryCheckBox?.let { settings.hideBinaryFilesInTree = it.isSelected }
     }
 
     override fun reset() {
-        textArea?.text = CopyForLlmSettingsState.getInstance().excludedPatterns.joinToString("\n")
+        val settings = CopyForLlmSettingsState.getInstance()
+        textArea?.text = settings.excludedPatterns.joinToString("\n")
+        hideBinaryCheckBox?.isSelected = settings.hideBinaryFilesInTree
     }
 
     override fun disposeUIResources() {
         textArea = null
+        hideBinaryCheckBox = null
     }
 }

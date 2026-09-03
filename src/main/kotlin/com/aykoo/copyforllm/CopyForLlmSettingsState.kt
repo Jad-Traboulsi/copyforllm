@@ -19,6 +19,7 @@ class CopyForLlmSettingsState : PersistentStateComponent<CopyForLlmSettingsState
 
     class State {
         var excludedPatterns: MutableList<String> = mutableListOf(".env", "node_modules")
+        var hideBinaryFilesInTree: Boolean = true
     }
 
     private var state = State()
@@ -33,6 +34,16 @@ class CopyForLlmSettingsState : PersistentStateComponent<CopyForLlmSettingsState
         get() = state.excludedPatterns
         set(value) {
             state.excludedPatterns = value
+        }
+
+    /**
+     * Whether binary files are left out of the copied file tree. Their entry in the
+     * content section is unaffected - that still names them and notes the skip.
+     */
+    var hideBinaryFilesInTree: Boolean
+        get() = state.hideBinaryFilesInTree
+        set(value) {
+            state.hideBinaryFilesInTree = value
         }
 
     /** Appends the patterns that aren't configured yet, keeping the existing order. */

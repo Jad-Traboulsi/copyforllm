@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.jadtraboulsi.copyforllm</id>
     <name>CopyForLlm+</name>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <vendor url="https://github.com/Jad-Traboulsi/copyforllm">Jad Traboulsi</vendor>
     <description><![CDATA[
     A fork of <a href="https://github.com/AykoSc/copyforllm">AykoSc/copyforllm</a> that adds sensitive-file/folder
@@ -12,13 +12,19 @@
     <ul>
         <li>Generates a file tree of the selection relative to the project root.</li>
         <li>Includes file content with language-specific comment headers showing project-relative paths.</li>
-        <li>Skips binary and empty file content but includes them in the tree/header.</li>
+        <li>Skips binary and empty file content but still names them in the content section.</li>
         <li>Right-click a file or folder and choose "Exclude from Copy for LLM+" to leave its content out; the same entry puts it back.</li>
         <li>Settings > Tools > CopyForLlm+: configure filename/path patterns (files or whole folders, e.g. ".env", "node_modules", "secrets") that stay visible in the tree but are noted as skipped and left out of the copied content.</li>
+        <li>Settings > Tools > CopyForLlm+: "Hide binary files in the copied file tree" (on by default) keeps binaries out of the tree, leaving the content section as it is.</li>
     </ul>
     Right-click on files/folders in the Project view and select "Copy for LLM+".
     ]]></description>
     <change-notes><![CDATA[
+    <em>1.3.0</em>
+     <ul>
+         <li>Added a "Hide binary files in the copied file tree" option (Settings > Tools > CopyForLlm+), on by default. Binary files - and folders left with nothing else to show - are dropped from the tree; the content section is unchanged and still names every binary file with a note that its content was skipped.</li>
+     </ul>
+     <br/>
     <em>1.2.0</em>
      <ul>
          <li>Added an "Exclude from Copy for LLM+" entry to the Project view context menu, which adds the selected file's or folder's path to the exclusion patterns; on an already excluded selection it turns into "Include in Copy for LLM+".</li>
