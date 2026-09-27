@@ -1,0 +1,5 @@
+node_modules/
+out/
+*.vsix
+# The repo root ignores .vscode/, but the launch config here is what runs the extension with F5.
+!.vscode/

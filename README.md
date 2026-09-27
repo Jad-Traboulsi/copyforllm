@@ -7,6 +7,8 @@ This is a fork of [AykoSc/copyforllm](https://github.com/AykoSc/copyforllm), lic
 Apache License 2.0 (see `LICENSE`). Changes in this fork: sensitive files and folders (e.g. `.env`, `node_modules`)
 can be excluded from the copied content, from a settings page or straight from the Project view context menu.
 
+A VS Code version of the extension lives in [`vscode/`](vscode/README.md).
+
 # Usage
 
 Right-click files/folders in the Project view, select "Copy for LLM+", and paste into your LLM prompt.

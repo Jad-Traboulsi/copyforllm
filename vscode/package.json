@@ -1,0 +1,110 @@
+{
+  "name": "copy-for-llm-plus",
+  "displayName": "CopyForLlm+",
+  "description": "Copies selected files and folders - structure and content - to the clipboard, formatted for pasting into LLMs, with sensitive-file exclusion.",
+  "version": "1.0.0",
+  "publisher": "JadTraboulsi",
+  "license": "Apache-2.0",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jad-Traboulsi/copyforllm"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "llm",
+    "ai",
+    "chatgpt",
+    "claude",
+    "clipboard",
+    "copy"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "copyForLlm.copy",
+        "title": "Copy for LLM+"
+      },
+      {
+        "command": "copyForLlm.exclude",
+        "title": "Exclude from Copy for LLM+"
+      },
+      {
+        "command": "copyForLlm.include",
+        "title": "Include in Copy for LLM+"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "copyForLlm.copy",
+          "when": "false"
+        },
+        {
+          "command": "copyForLlm.exclude",
+          "when": "false"
+        },
+        {
+          "command": "copyForLlm.include",
+          "when": "false"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "copyForLlm.copy",
+          "group": "copyForLlm@1"
+        },
+        {
+          "command": "copyForLlm.exclude",
+          "when": "!explorerResourceIsRoot && resourcePath not in copyForLlm.excludedPaths",
+          "group": "copyForLlm@2"
+        },
+        {
+          "command": "copyForLlm.include",
+          "when": "!explorerResourceIsRoot && resourcePath in copyForLlm.excludedPaths",
+          "group": "copyForLlm@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "CopyForLlm+",
+      "properties": {
+        "copyForLlm.excludedPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".env",
+            "node_modules"
+          ],
+          "markdownDescription": "Filename/path patterns whose content is never copied. A match - whether a single file or a whole folder - always stays visible in the tree; in the content section it's noted as skipped. `*` and `?` wildcards are supported, matching is case-insensitive against both the name and the workspace-relative path. Right-clicking a file or folder and choosing **Exclude from Copy for LLM+** adds its path here. Example: `.env`, `*.pem`, `node_modules`, `secrets`."
+        },
+        "copyForLlm.hideBinaryFilesInTree": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Hide binary files in the copied file tree. A folder left with nothing to show is hidden along with them. This only affects the tree - the content section still names every binary file and notes that its content was skipped."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "~1.90.0",
+    "typescript": "^5.9.3"
+  }
+}
