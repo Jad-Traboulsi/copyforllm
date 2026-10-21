@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BuilderResult, LlmContentBuilder, messageOf } from './contentBuilder';
 import { ExclusionMatcher } from './exclusionMatcher';
+import { collectMatches, promptForEntries } from './matchingFiles';
 import { nameOf, relativePathOf } from './paths';
 import { addExcludedPatterns, readSettings, removeExcludedPatterns } from './settings';
 
@@ -11,9 +12,16 @@ import { addExcludedPatterns, readSettings, removeExcludedPatterns } from './set
  */
 const EXCLUDED_PATHS_CONTEXT = 'copyForLlm.excludedPaths';
 
+/** The list last entered in "Copy Matching Files for LLM+", offered again next time. */
+const LAST_MATCHING_ENTRIES_KEY = 'copyForLlm.lastMatchingEntries';
+
 export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('copyForLlm.copy', copyForLlm),
+        vscode.commands.registerCommand(
+            'copyForLlm.copyMatching',
+            (uri?: vscode.Uri, uris?: vscode.Uri[]) => copyMatchingFiles(context, uri, uris),
+        ),
         vscode.commands.registerCommand('copyForLlm.exclude', excludeSelection),
         vscode.commands.registerCommand('copyForLlm.include', includeSelection),
         vscode.workspace.onDidChangeConfiguration(event => {
@@ -30,25 +38,56 @@ function selectionOf(uri?: vscode.Uri, uris?: vscode.Uri[]): vscode.Uri[] {
     return uri ? [uri] : [];
 }
 
-async function copyForLlm(uri?: vscode.Uri, uris?: vscode.Uri[]): Promise<void> {
-    const byFolder = new Map<number, { folder: vscode.WorkspaceFolder; selected: vscode.Uri[] }>();
-    for (const selected of selectionOf(uri, uris)) {
-        const folder = vscode.workspace.getWorkspaceFolder(selected);
-        if (!folder) continue;
-        const group = byFolder.get(folder.index) ?? { folder, selected: [] };
-        group.selected.push(selected);
-        byFolder.set(folder.index, group);
-    }
-    if (byFolder.size === 0) {
-        vscode.window.showWarningMessage('Could not determine the selected files/folders to copy.');
-        return;
-    }
+function copyForLlm(uri?: vscode.Uri, uris?: vscode.Uri[]): Promise<void> {
+    return copyToClipboard('Could not determine the selected files/folders to copy.', async () => selectionOf(uri, uris));
+}
 
+/**
+ * Asks for a list of extensions and/or file names and copies only the matching files
+ * found under the selected folders, at any depth. The matches go to the builder as the
+ * selection, so the tree shows just the paths down to them.
+ */
+async function copyMatchingFiles(context: vscode.ExtensionContext, uri?: vscode.Uri, uris?: vscode.Uri[]): Promise<void> {
+    const selection = selectionOf(uri, uris);
+    if (selection.length === 0) return;
+
+    const entries = await promptForEntries(context.globalState.get<string[]>(LAST_MATCHING_ENTRIES_KEY, []));
+    if (!entries || entries.length === 0) return;
+    await context.globalState.update(LAST_MATCHING_ENTRIES_KEY, entries);
+
+    const where = selection.length === 1 ? `'${nameOf(selection[0])}'` : 'the selected folders';
+    const terms = entries.map(entry => entry.toLowerCase());
+    const matcher = new ExclusionMatcher(readSettings().excludedPatterns);
+    await copyToClipboard(
+        `No files matching ${entries.join(', ')} found under ${where}.`,
+        token => collectMatches(selection, terms, matcher, token),
+    );
+}
+
+/**
+ * Builds the LLM content for the files [collect] returns and puts it on the clipboard,
+ * shared by both copy commands. Collecting runs inside the cancellable progress
+ * notification, so walking a large folder shows progress too. When nothing is
+ * collected, [emptyMessage] is shown as a warning and the clipboard is left alone.
+ */
+async function copyToClipboard(
+    emptyMessage: string,
+    collect: (token: vscode.CancellationToken) => Promise<vscode.Uri[]>,
+): Promise<void> {
     const settings = readSettings();
     try {
         const results = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: 'Copying for LLM+', cancellable: true },
             async (progress, token) => {
+                const byFolder = new Map<number, { folder: vscode.WorkspaceFolder; selected: vscode.Uri[] }>();
+                for (const selected of await collect(token)) {
+                    const folder = vscode.workspace.getWorkspaceFolder(selected);
+                    if (!folder) continue;
+                    const group = byFolder.get(folder.index) ?? { folder, selected: [] };
+                    group.selected.push(selected);
+                    byFolder.set(folder.index, group);
+                }
+
                 const results: BuilderResult[] = [];
                 let reported = 0;
                 for (const [index, { folder, selected }] of [...byFolder.values()].entries()) {
@@ -63,6 +102,10 @@ async function copyForLlm(uri?: vscode.Uri, uris?: vscode.Uri[]): Promise<void> 
                 return results;
             },
         );
+        if (results.length === 0) {
+            vscode.window.showWarningMessage(emptyMessage);
+            return;
+        }
 
         const content = results.map(result => result.content).join('\n\n');
         const fileCount = results.reduce((sum, result) => sum + result.fileCount, 0);

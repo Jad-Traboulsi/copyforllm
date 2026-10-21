@@ -15,6 +15,22 @@ The output includes a file tree representing the selection within the workspace 
 files, each preceded by a header comment indicating its path relative to the workspace folder. Selecting items from
 several folders of a multi-root workspace copies one such block per folder.
 
+# Copying only matching files
+
+Right-click one or more folders and choose **Copy Matching Files for LLM+**. Build the list of what to copy: type an
+entry and press Enter to add it (it shows up checked), then press Enter with nothing typed to copy. Case doesn't
+matter:
+
+- `.xml` - every file whose name ends with it (also works for longer endings like `.test.ts`)
+- `xml` - the same as `.xml`, and also a file named exactly `xml` (so `Dockerfile` or `Makefile` work too)
+- `pom.xml` - only files with exactly that name
+
+Only the checked entries are used. Only the matching files found at any depth under the selection are copied, and the
+tree shows just the paths leading down to them. Your last list comes back pre-checked next time.
+
+Exclusion patterns and the binary-file setting below apply as usual. Excluded folders (e.g. `node_modules`) and
+symlinked folders are not searched.
+
 # Excluding sensitive files and folders
 
 Right-click a file or folder in the Explorer and choose **Exclude from Copy for LLM+**. Its workspace-relative path is

@@ -16,6 +16,21 @@ Right-click files/folders in the Project view, select "Copy for LLM+", and paste
 The output includes a file tree representing the selection within the project and the content of the included files,
 each preceded by a header comment indicating its path relative to the project root.
 
+# Copying only matching files
+
+Right-click one or more folders and choose **Copy Matching Files for LLM+**. Enter what to copy, one entry per line
+(case doesn't matter):
+
+- `.xml` - every file whose name ends with it (also works for longer endings like `.test.ts`)
+- `xml` - the same as `.xml`, and also a file named exactly `xml` (so `Dockerfile` or `Makefile` work too)
+- `pom.xml` - only files with exactly that name
+
+Only the matching files found at any depth under the selection are copied, and the tree shows just the paths
+leading down to them. The dialog remembers your last list.
+
+Exclusion patterns and the binary-file option below apply as usual. Excluded folders (e.g. `node_modules`) are not
+searched at all.
+
 # Excluding sensitive files and folders
 
 Right-click a file or folder in the Project view and choose **Exclude from Copy for LLM+**. Its project-relative

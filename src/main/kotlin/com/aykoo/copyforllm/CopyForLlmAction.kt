@@ -8,9 +8,12 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import java.awt.datatransfer.StringSelection
 
 
@@ -52,59 +55,75 @@ class CopyForLlmAction : AnAction() {
         //    logger.info("Navigatable[$index]: Type=${nav?.javaClass?.name ?: "null"}, Value=${nav}")
         // }
 
-        val selectedFiles = SelectionResolver.resolve(navigatables).toTypedArray()
+        val selectedFiles = SelectionResolver.resolve(navigatables)
 
         logger.info("Resolved ${selectedFiles.size} distinct VirtualFiles from ${navigatables.size} Navigatables.")
         // Optional: Log resolved files
         // selectedFiles.forEachIndexed { index, vf -> logger.debug("  Final VF[$index]: ${vf.path}") }
 
-        if (selectedFiles.isEmpty()) {
-            logger.warn("Action performed but failed to resolve any VirtualFiles from the selected Navigatables.")
-            CopyForLlmNotifier.notify(
-                project,
-                NotificationType.WARNING,
-                "Could not determine the selected files/folders to copy."
-            )
-            return
-        }
+        copyForLlm(project, "Could not determine the selected files/folders to copy.") { selectedFiles }
+    }
+}
 
-        // Run the potentially long-running operation in a background thread
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Copying for LLM+", true) {
-            override fun run(indicator: ProgressIndicator) {
-                indicator.isIndeterminate = false
-                indicator.fraction = 0.0
-                indicator.text = "Preparing copy operation..."
+private val copyLogger = Logger.getInstance("com.aykoo.copyforllm.CopyForLlm")
 
-                try {
-                    val contentBuilder = LlmContentBuilder(project, indicator)
-                    val result = contentBuilder.buildContent(selectedFiles)
+/**
+ * Builds the LLM content for the files [collectFiles] returns and puts it on the clipboard,
+ * all in a cancellable background task, shared by every CopyForLlm+ copy action. Collecting
+ * runs in that task too, so walking a large folder doesn't block the UI. When nothing is
+ * collected, [emptyMessage] is shown as a warning and the clipboard is left alone.
+ */
+internal fun copyForLlm(
+    project: Project,
+    emptyMessage: String,
+    collectFiles: (ProgressIndicator) -> List<VirtualFile>
+) {
+    ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Copying for LLM+", true) {
+        override fun run(indicator: ProgressIndicator) {
+            indicator.isIndeterminate = false
+            indicator.fraction = 0.0
+            indicator.text = "Preparing copy operation..."
 
-                    indicator.fraction = 1.0
-                    indicator.text = "Copying to clipboard..."
-
-                    // Copying to clipboard must happen on the EDT
+            try {
+                val selectedFiles = collectFiles(indicator)
+                if (selectedFiles.isEmpty()) {
+                    copyLogger.warn("Copy for LLM+ found no files to copy.")
                     ApplicationManager.getApplication().invokeLater {
-                        val contentToCopy = result.clipboardContent
-                        val charCount = contentToCopy.length
+                        CopyForLlmNotifier.notify(project, NotificationType.WARNING, emptyMessage)
+                    }
+                    return
+                }
 
-                        CopyPasteManager.getInstance().setContents(StringSelection(contentToCopy))
-                        CopyForLlmNotifier.notify(
-                            project,
-                            NotificationType.INFORMATION,
-                            "Copied ${result.fileCount} files (${result.skippedCount} skipped, ${charCount} characters) to clipboard."
-                        )
-                    }
-                } catch (ex: Exception) { // Catch generic exceptions during the process
-                    logger.error("Copy for LLM+ action failed.", ex)
-                    ApplicationManager.getApplication().invokeLater {
-                        CopyForLlmNotifier.notify(
-                            project,
-                            NotificationType.ERROR,
-                            "Error copying content: ${ex.message ?: "Unknown error"}"
-                        )
-                    }
+                val contentBuilder = LlmContentBuilder(project, indicator)
+                val result = contentBuilder.buildContent(selectedFiles.toTypedArray())
+
+                indicator.fraction = 1.0
+                indicator.text = "Copying to clipboard..."
+
+                // Copying to clipboard must happen on the EDT
+                ApplicationManager.getApplication().invokeLater {
+                    val contentToCopy = result.clipboardContent
+                    val charCount = contentToCopy.length
+
+                    CopyPasteManager.getInstance().setContents(StringSelection(contentToCopy))
+                    CopyForLlmNotifier.notify(
+                        project,
+                        NotificationType.INFORMATION,
+                        "Copied ${result.fileCount} files (${result.skippedCount} skipped, ${charCount} characters) to clipboard."
+                    )
+                }
+            } catch (ex: ProcessCanceledException) {
+                throw ex
+            } catch (ex: Exception) { // Catch generic exceptions during the process
+                copyLogger.error("Copy for LLM+ action failed.", ex)
+                ApplicationManager.getApplication().invokeLater {
+                    CopyForLlmNotifier.notify(
+                        project,
+                        NotificationType.ERROR,
+                        "Error copying content: ${ex.message ?: "Unknown error"}"
+                    )
                 }
             }
-        })
-    }
+        }
+    })
 }
