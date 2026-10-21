@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.jadtraboulsi.copyforllm</id>
     <name>CopyForLlm+</name>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
     <vendor url="https://github.com/Jad-Traboulsi/copyforllm">Jad Traboulsi</vendor>
     <description><![CDATA[
     A fork of <a href="https://github.com/AykoSc/copyforllm">AykoSc/copyforllm</a> that adds sensitive-file/folder
@@ -22,6 +22,11 @@
     <img src="https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/images/intellij-matching.gif" alt="Copy Matching Files for LLM+" width="800">
     ]]></description>
     <change-notes><![CDATA[
+    <em>1.4.1</em>
+     <ul>
+         <li>Added a demo GIF to the plugin description.</li>
+     </ul>
+     <br/>
     <em>1.4.0</em>
      <ul>
          <li>Added a "Copy Matching Files for LLM+" entry to the Project view context menu for folders. It asks for a list, one per line, of extensions (".xml" or "xml") and/or exact file names ("pom.xml") and copies only the matching files found at any depth under the selected folders; the tree shows just the paths down to them. Exclusion patterns and the "hide binary files" option apply as usual, and excluded folders are not searched.</li>
