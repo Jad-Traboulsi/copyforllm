@@ -2,7 +2,7 @@
   "name": "copy-for-llm-plus",
   "displayName": "CopyForLlm+",
   "description": "Copies selected files and folders - structure and content - to the clipboard, formatted for pasting into LLMs, with sensitive-file exclusion.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "JadTraboulsi",
   "license": "Apache-2.0",
   "icon": "images/icon.png",
@@ -35,6 +35,10 @@
         "title": "Copy for LLM+"
       },
       {
+        "command": "copyForLlm.copyMatching",
+        "title": "Copy Matching Files for LLM+"
+      },
+      {
         "command": "copyForLlm.exclude",
         "title": "Exclude from Copy for LLM+"
       },
@@ -47,6 +51,10 @@
       "commandPalette": [
         {
           "command": "copyForLlm.copy",
+          "when": "false"
+        },
+        {
+          "command": "copyForLlm.copyMatching",
           "when": "false"
         },
         {
@@ -64,14 +72,19 @@
           "group": "copyForLlm@1"
         },
         {
+          "command": "copyForLlm.copyMatching",
+          "when": "explorerResourceIsFolder",
+          "group": "copyForLlm@2"
+        },
+        {
           "command": "copyForLlm.exclude",
           "when": "!explorerResourceIsRoot && resourcePath not in copyForLlm.excludedPaths",
-          "group": "copyForLlm@2"
+          "group": "copyForLlm@3"
         },
         {
           "command": "copyForLlm.include",
           "when": "!explorerResourceIsRoot && resourcePath in copyForLlm.excludedPaths",
-          "group": "copyForLlm@2"
+          "group": "copyForLlm@3"
         }
       ]
     },
