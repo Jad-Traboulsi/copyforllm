@@ -3,3 +3,5 @@ src/**
 **/*.map
 .gitignore
 tsconfig.json
+# README screenshots load from GitHub; only the icon needs to ship
+images/vscode-*

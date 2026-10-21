@@ -9,12 +9,18 @@ can be excluded from the copied content, from a settings page or straight from t
 
 A VS Code version of the extension lives in [`vscode/`](vscode/README.md).
 
+![Copy Matching Files for LLM+ in IntelliJ](images/intellij-matching.gif)
+
 # Usage
 
 Right-click files/folders in the Project view, select "Copy for LLM+", and paste into your LLM prompt.
 
 The output includes a file tree representing the selection within the project and the content of the included files,
 each preceded by a header comment indicating its path relative to the project root.
+
+![The CopyForLlm+ entries in the context menu](images/intellij-copy-menu.png)
+
+![Copied output: the tree, the skipped node_modules folder and binary files, then each file with its path header](images/intellij-copy-result.png)
 
 # Copying only matching files
 
@@ -30,6 +36,10 @@ leading down to them. The dialog remembers your last list.
 
 Exclusion patterns and the binary-file option below apply as usual. Excluded folders (e.g. `node_modules`) are not
 searched at all.
+
+![Entering .ts and pom.xml](images/intellij-matching-input.png)
+
+![Only the matching files are copied](images/intellij-matching-result.png)
 
 # Excluding sensitive files and folders
 
@@ -49,6 +59,12 @@ matched folder this applies to everything inside it too, without descending into
 individually.
 
 `.env` and `node_modules` are excluded by default.
+
+![Exclude from Copy for LLM+ in the context menu](images/intellij-exclude-menu.png)
+
+![The same entry turns into Include in Copy for LLM+ on an excluded item](images/intellij-include-menu.png)
+
+![CopyForLlm+ settings](images/intellij-settings.png)
 
 # Hiding binary files from the tree
 

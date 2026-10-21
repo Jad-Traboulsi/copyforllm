@@ -7,6 +7,8 @@ This is the VS Code port of the [CopyForLlm+ JetBrains plugin](https://github.co
 fork of [AykoSc/copyforllm](https://github.com/AykoSc/copyforllm), licensed under the Apache License 2.0 (see
 `LICENSE`).
 
+![Copy Matching Files for LLM+ in VS Code](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-matching.gif)
+
 # Usage
 
 Right-click files/folders in the Explorer, select **Copy for LLM+**, and paste into your LLM prompt.
@@ -14,6 +16,10 @@ Right-click files/folders in the Explorer, select **Copy for LLM+**, and paste i
 The output includes a file tree representing the selection within the workspace folder and the content of the included
 files, each preceded by a header comment indicating its path relative to the workspace folder. Selecting items from
 several folders of a multi-root workspace copies one such block per folder.
+
+![The CopyForLlm+ entries in the context menu](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-copy-menu.png)
+
+![Copied output: the tree, the skipped node_modules folder and binary files, then each file with its path header](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-copy-result.png)
 
 # Copying only matching files
 
@@ -30,6 +36,10 @@ tree shows just the paths leading down to them. Your last list comes back pre-ch
 
 Exclusion patterns and the binary-file setting below apply as usual. Excluded folders (e.g. `node_modules`) and
 symlinked folders are not searched.
+
+![Entering .ts and pom.xml](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-matching-input.png)
+
+![Only the matching files are copied](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-matching-result.png)
 
 # Excluding sensitive files and folders
 
@@ -50,6 +60,12 @@ matched folder this applies to everything inside it too, without descending into
 individually.
 
 `.env` and `node_modules` are excluded by default.
+
+![Exclude from Copy for LLM+ in the context menu](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-exclude-menu.png)
+
+![The same entry turns into Include in Copy for LLM+ on an excluded item](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-include-menu.png)
+
+![CopyForLlm+ settings](https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/vscode/images/vscode-settings.png)
 
 # Hiding binary files from the tree
 
