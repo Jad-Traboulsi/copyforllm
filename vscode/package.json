@@ -2,7 +2,7 @@
   "name": "copy-for-llm-plus",
   "displayName": "CopyForLlm+",
   "description": "Copies selected files and folders - structure and content - to the clipboard, formatted for pasting into LLMs, with sensitive-file exclusion.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "JadTraboulsi",
   "license": "Apache-2.0",
   "icon": "images/icon.png",

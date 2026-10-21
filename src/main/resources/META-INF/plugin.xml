@@ -18,7 +18,8 @@
         <li>Settings > Tools > CopyForLlm+: configure filename/path patterns (files or whole folders, e.g. ".env", "node_modules", "secrets") that stay visible in the tree but are noted as skipped and left out of the copied content.</li>
         <li>Settings > Tools > CopyForLlm+: "Hide binary files in the copied file tree" (on by default) keeps binaries out of the tree, leaving the content section as it is.</li>
     </ul>
-    Right-click on files/folders in the Project view and select "Copy for LLM+".
+    Right-click on files/folders in the Project view and select "Copy for LLM+".<br>
+    <img src="https://raw.githubusercontent.com/Jad-Traboulsi/copyforllm/main/images/intellij-matching.gif" alt="Copy Matching Files for LLM+" width="800">
     ]]></description>
     <change-notes><![CDATA[
     <em>1.4.0</em>

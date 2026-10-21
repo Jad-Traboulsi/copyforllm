@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Added screenshots and a demo GIF to the README.
+
 ## 1.1.0
 
 - Added **Copy Matching Files for LLM+** to the Explorer context menu for folders. It asks for a list of extensions
